@@ -12,8 +12,7 @@ public class App
 {
     public static void main( String[] args )
     {
-    	DropBoxApi dropBoxer = new DropBoxApi();
-    	dropBoxer.uploadFile("C:\\Users\\Ahmed\\Desktop\\Ahmed.txt");
+    	
     	
     }
 }
