@@ -67,7 +67,6 @@ public class DropBoxApi {
 		    try {
 				inputStream.close();
 			} catch (IOException e) {
-
 				e.printStackTrace();
 			}
 		}
@@ -77,5 +76,15 @@ public class DropBoxApi {
 		DbxEntry.WithChildren listing = mDbxClient.getMetadataWithChildren(folderPath);
 		System.out.println("Files in the root path:");		
 		return listing.children.isEmpty() ? null : (ArrayList<DbxEntry>)listing.children;
+	}
+	
+	public boolean deleteEntry(DbxEntry file){
+		try {
+			mDbxClient.delete(file.path);
+			return true;
+		} catch (DbxException e) {
+			System.out.println("Can not delete file " + file.name);				
+		}		
+		return false;		
 	}
 }

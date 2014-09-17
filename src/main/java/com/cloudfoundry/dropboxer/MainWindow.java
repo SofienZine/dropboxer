@@ -19,18 +19,20 @@ import com.cloudfoundry.dropboxer.api.DropBoxApi;
 import com.dropbox.core.DbxEntry;
 import com.dropbox.core.DbxException;
 
+import javax.swing.JLabel;
+
 public class MainWindow {
 
 	private JFrame frame;
-	private JList list;
-    private DefaultListModel listModel;
-    private ArrayList<DbxEntry> entries;
-    
-    private JButton btnUploadfiles;
-    private JButton btnShowFiles;
-    private JButton btnDeleteFile;
-    
-    
+	private JList<String> list;
+	private DefaultListModel<String> listModel;
+	private ArrayList<DbxEntry> entries;
+
+	private JButton btnUploadfiles;
+	private JButton btnShowFiles;
+	private JButton btnDeleteFile;
+	private JLabel lblInfoLabel;
+
 	/**
 	 * Launch the application.
 	 */
@@ -62,8 +64,8 @@ public class MainWindow {
 		frame.setBounds(100, 100, 450, 300);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
-		
-		
+
+		listModel = new DefaultListModel<String>();
 
 		btnUploadfiles = new JButton("Upload Files");
 		btnUploadfiles.addActionListener(new ActionListener() {
@@ -72,74 +74,84 @@ public class MainWindow {
 				int returnVal = fc.showOpenDialog(frame);
 
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
-					System.out.println("You chose to open this file: "
+					lblInfoLabel.setText("You chose to load this file: "
 							+ fc.getSelectedFile().getAbsolutePath());
-					
+
 					DropBoxApi.getInstance().uploadFile(fc.getSelectedFile());
+					refreshListFiles();
 				}
 
 			}
 		});
 		btnUploadfiles.setBounds(10, 227, 89, 23);
 		frame.getContentPane().add(btnUploadfiles);
-			
-		listModel = new DefaultListModel<String>();
+
+		list = new JList<String>();
+		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		list.setSelectedIndex(0);
+		list.setVisibleRowCount(5);
+		JScrollPane listScrollPane = new JScrollPane(list);
+		listScrollPane.setBounds(10, 10, 300, 200);
+
+		frame.getContentPane().add(listScrollPane);
+
+		btnShowFiles = new JButton("Show files");
+		btnShowFiles.setBounds(114, 227, 89, 23);
+		frame.getContentPane().add(btnShowFiles);
+
+		btnDeleteFile = new JButton("Delete file");
+		btnDeleteFile.setBounds(213, 227, 89, 23);
+		frame.getContentPane().add(btnDeleteFile);
+		btnDeleteFile.addActionListener(new DeletFileListener());
+
+		lblInfoLabel = new JLabel();
+		lblInfoLabel.setBounds(334, 12, 200, 200);
+		frame.getContentPane().add(lblInfoLabel);
+
+		refreshListFiles();
+	}
+
+	private void refreshListFiles() {
 		try {
+			if (listModel.isEmpty() == false) {
+				listModel.removeAllElements();
+			}
+
 			entries = DropBoxApi.getInstance().getFilesFromFolder("/");
+			if (entries != null) {
+				btnDeleteFile.setEnabled(true);
+				for (DbxEntry child : entries) {
+					listModel.addElement(child.name);
+				}
+			} else {
+				btnDeleteFile.setEnabled(false);
+			}
+			list.setModel(listModel);
+
 		} catch (DbxException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		if(entries !=null ){
-			for (DbxEntry child : entries) {
-				listModel.addElement(child.name);
-			}
-		}
-                       
-        list =  new JList<String>(listModel);
-		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        list.setSelectedIndex(0);        
-        list.setVisibleRowCount(5);
-        JScrollPane listScrollPane = new JScrollPane(list);
-        listScrollPane.setBounds(10, 10, 300, 200);
-        
-		frame.getContentPane().add(listScrollPane);
-		
-		btnShowFiles = new JButton("Show files");
-		btnShowFiles.setBounds(114, 227, 89, 23);
-		frame.getContentPane().add(btnShowFiles);
-		
-		btnDeleteFile = new JButton("Delete file");
-		btnDeleteFile.setBounds(213, 227, 89, 23);
-		frame.getContentPane().add(btnDeleteFile);
 
 	}
-	
+
 	class DeletFileListener implements ActionListener {
-        public void actionPerformed(ActionEvent e) {
-            //This method can be called only if
-            //there's a valid selection
-            //so go ahead and remove whatever's selected.
-            int index = list.getSelectedIndex();
-            DbxEntry file = entries.get(index);
-            
-            listModel.remove(index);
- 
-            int size = listModel.getSize();
- 
-            if (size == 0) { //Nobody's left, disable firing.
-                btnDeleteFile.setEnabled(false);
- 
-            } else { //Select an index.
-                if (index == listModel.getSize()) {
-                    //removed item in last position
-                    index--;
-                }
- 
-                list.setSelectedIndex(index);
-                list.ensureIndexIsVisible(index);
-            }
-        }
-    }
+		public void actionPerformed(ActionEvent e) {
+
+			int index = list.getSelectedIndex();
+			DbxEntry file = entries.get(index);
+
+			if (DropBoxApi.getInstance().deleteEntry(file)) {
+				String text = lblInfoLabel.getText();
+
+				lblInfoLabel.setText(String.format(
+						"File %s was succefully deleted ", file.name));
+				lblInfoLabel.setSize(lblInfoLabel.getPreferredSize());
+
+				// Refreshing list
+				refreshListFiles();
+
+			}
+		}
+	}
 }
