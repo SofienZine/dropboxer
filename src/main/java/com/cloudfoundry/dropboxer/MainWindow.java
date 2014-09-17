@@ -1,16 +1,15 @@
 package com.cloudfoundry.dropboxer;
 
-import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.util.ArrayList;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
@@ -18,8 +17,6 @@ import javax.swing.ListSelectionModel;
 import com.cloudfoundry.dropboxer.api.DropBoxApi;
 import com.dropbox.core.DbxEntry;
 import com.dropbox.core.DbxException;
-
-import javax.swing.JLabel;
 
 public class MainWindow {
 
